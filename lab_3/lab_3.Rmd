@@ -1,0 +1,96 @@
+<!--- Begin styling code. --->
+<style type="text/css">
+/* Whole document: */
+body{
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: 12pt;
+}
+h1.title {
+  font-size: 38px;
+  text-align: center;
+}
+h4.author {
+  font-size: 18px;
+  text-align: center;
+}
+h4.date {
+  font-size: 18px;
+  text-align: center;
+}
+</style>
+<!--- End styling code. --->
+
+---
+title: "Lab 3"
+author: "Siyue Zhu Collaborating with Harper Zhu"
+date: "10/28/2020"
+output: html_document
+---
+
+```{r}
+#Function: Write a function perform like the one sample t-test
+#Input: x, alternative, mu
+#Output: test_stat, df, alternative, p_val
+my_t.test <- function(x, alternative, mu) {
+  #Calculate the standard error
+  se <- sd(x) / sqrt(length(x))
+  #Calculate the test_stat
+  test_stat <- (mean(x) - mu) / se
+  #Calculate the degree of freedom
+  df <- length(x) - 1
+  if(alternative == "two.sided") {
+    #Calculate the p_value if the alternative is two sided
+    p_val <- 2 * pt(abs(test_stat), df, lower.tail = FALSE)
+  } else if(alternative == "less") {
+    #Calculate the p_value if the alternative is less
+    p_val <- pt(test_stat, df, lower.tail = TRUE)
+  } else if(alternative == "greater") {
+    #Calculate the p_value if the alternative is greater
+    p_val <- pt(test_stat, df, lower.tail = FALSE)
+  } else {
+    #Return a warning if the alternative is not reasonable
+    stop("Please try to enter a resonable alternative")
+  }
+  #Return test_stat, df, alternative and p_val
+  return(list("test_stat" = test_stat, "df" = df, "alternative" = alternative, "p_val" = p_val))
+}
+
+#Test our function
+x <- rnorm(100)
+t.test(x, alternative = "less", mu = 0)
+my_t.test(x, alternative = "less", mu = 0)
+
+```
+```{r}
+#Function: Write a function perform like linear regression
+#Input: formula, data
+#Output: Estimate, Std. Error, t value, and Pr(>|t|)
+my_lm <- function(formula, data) {
+  #Extract the x from the input
+  x <- model.matrix(formula, data)
+  #Extract the y from the input
+  y <- model.response(model.frame(formula, data))
+  #Calculate the estimate value
+  b <- solve(t(x) %*% x) %*% t(x) %*% y
+  #Calculate the degree of freedom
+  df <- nrow(x) - ncol(x)
+  #Estimate the sigma
+  sigma_2 <- sum((y - x %*% b)^2 / df)
+  #Calculate the standard error
+  se <- sqrt(diag(sigma_2 * solve(t(x) %*% x)))
+  #Calculate the test_stat
+  test_stat <- (b - 0) / se
+  #Calculate the p_value
+  p_value <- 2 * pt(abs(test_stat), df, lower.tail = FALSE)
+  #Calculate the t_value
+  t_value <- b / se
+  #Put output in a list
+  output <- list("Estimate" = b, "Std. Error" = se, "t value" = t_value, "Pr(>|t|)" = p_value)
+  #Convert the output into a table and return it
+  return(data.frame(output))
+}
+
+#Test our function
+summary(lm(mpg ~ hp + wt, mtcars))
+my_lm(mpg ~ hp + wt, mtcars)
+```
